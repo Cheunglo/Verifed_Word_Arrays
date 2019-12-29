@@ -100,11 +100,13 @@ value "w_fold [0, 1, 2, 3, 4, 5] 1 1 summer 0 ()"
 
 subsection \<open> Correctness \<close>
 
-lemma w_fold_fold_eq_whole: "w_fold xs 0 (length xs) f acc obsv = fold (\<lambda>a b. f a b obsv) xs acc"
+lemma w_fold_fold_eq_whole: 
+  "w_fold xs 0 (length xs) f acc obsv = fold (\<lambda>a b. f a b obsv) xs acc"
   apply (simp add: w_fold_def)
   done
 
-lemma w_fold_fold_eq_slice: "w_fold xs frm to f acc obsv = fold (\<lambda>a b. f a b obsv) (take (to - frm) (drop frm xs)) acc"
+lemma w_fold_fold_eq_slice: 
+  "w_fold xs frm to f acc obsv = fold (\<lambda>a b. f a b obsv) (take (to - frm) (drop frm xs)) acc"
   apply (simp add: w_fold_def)
   done
 
@@ -141,15 +143,20 @@ definition w_map :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> 
 
 subsection \<open> w_map helper lemmas \<close>
 
-lemma w_map_bounds: "to \<ge> length xs \<Longrightarrow> w_map xs frm to f acc obsv = w_map xs frm (length xs) f acc obsv"
+lemma w_map_bounds: 
+  "to \<ge> length xs \<Longrightarrow> w_map xs frm to f acc obsv = w_map xs frm (length xs) f acc obsv"
   apply (simp add: w_map_def)
   done
-lemma w_map_internal: "length (fst (fold (\<lambda>x p. (fst p @ [fst (f x (snd p) obsv)], snd (f x (snd p) obsv))) xs (ls, acc))) = length ls + length xs "
+lemma w_map_internal: 
+  "length (fst (fold (\<lambda>x p. (fst p @ [fst (f x (snd p) obsv)], snd (f x (snd p) obsv))) xs (ls, acc))) 
+    = length ls + length xs"
   apply (induct rule: rev_induct)
    apply simp
   apply (simp add: split_def)
   done
-lemma w_map_length: "length (fst (w_map xs frm to f acc obsv)) = length xs"
+
+lemma w_map_length: 
+  "length (fst (w_map xs frm to f acc obsv)) = length xs"
   apply (induct rule: rev_induct)
    apply (simp add: w_map_def)
   apply (clarsimp simp add: w_map_def)
@@ -169,14 +176,16 @@ lemma w_map_length: "length (fst (w_map xs frm to f acc obsv)) = length xs"
   done
 
 lemma w_map_length_same:
-  "length xs = length ys \<Longrightarrow> length (fst (w_map xs frm to f acc obsv)) = length (fst (w_map ys frm' to' f' acc' obsv'))"
+  "length xs = length ys \<Longrightarrow> length (fst (w_map xs frm to f acc obsv)) 
+    = length (fst (w_map ys frm' to' f' acc' obsv'))"
   apply (induct xs arbitrary: ys rule: rev_induct)
    apply simp
    apply (simp add: w_map_def)
   by (simp add: w_map_length)
 
 lemma w_map_length_Cons: 
-  "length (fst (w_map (x # xs) frm to f acc obsv)) = Suc (length (fst (w_map xs frm' to' f' acc' obsv')))"
+  "length (fst (w_map (x # xs) frm to f acc obsv)) 
+    = Suc (length (fst (w_map xs frm' to' f' acc' obsv')))"
   apply (induct xs)
    apply (subst w_map_length)
    apply (subst w_map_length)
@@ -187,7 +196,8 @@ lemma w_map_length_Cons:
   done
 
 lemma w_map_length_append: 
-  "length (fst (w_map (xs @ [x]) frm to f acc obsv)) = Suc (length (fst (w_map xs frm' to' f' acc' obsv')))"
+  "length (fst (w_map (xs @ [x]) frm to f acc obsv)) 
+    = Suc (length (fst (w_map xs frm' to' f' acc' obsv')))"
   apply (induct xs)
    apply (subst w_map_length)
    apply (subst w_map_length)
@@ -198,14 +208,16 @@ lemma w_map_length_append:
   done
 
 lemma w_map_append_list:
-  "to \<le> length xs \<Longrightarrow> fst (w_map (xs @ ys) frm to f acc obsv) = fst (w_map xs frm to f acc obsv) @ ys"
+  "to \<le> length xs \<Longrightarrow> 
+    fst (w_map (xs @ ys) frm to f acc obsv) = fst (w_map xs frm to f acc obsv) @ ys"
   apply (simp add: w_map_def)
   apply clarsimp
   apply (simp add: split_def)
   done
 
 lemma w_map_append_acc:
-  "to \<le> length xs \<Longrightarrow> snd (w_map (xs @ ys) frm to f acc obsv) = snd (w_map xs frm to f acc obsv)"
+  "to \<le> length xs \<Longrightarrow> 
+    snd (w_map (xs @ ys) frm to f acc obsv) = snd (w_map xs frm to f acc obsv)"
   apply (simp add: w_map_def)
   apply (simp add: split_def)
   done
@@ -265,8 +277,9 @@ lemma w_map_step_list:
   done
 
 lemma w_map_step_acc:
-  "\<lbrakk>frm \<le> to; Suc to \<le> length xs\<rbrakk> \<Longrightarrow> snd (w_map xs frm (Suc to) f acc obsv) = 
-  snd (f (xs ! to) (snd (w_map xs frm to f acc obsv)) obsv)"
+  "\<lbrakk>frm \<le> to; Suc to \<le> length xs\<rbrakk> 
+    \<Longrightarrow> snd (w_map xs frm (Suc to) f acc obsv) 
+      = snd (f (xs ! to) (snd (w_map xs frm to f acc obsv)) obsv)"
   apply (induct xs rule: rev_induct)
    apply (clarsimp simp add: w_map_def)
   apply clarsimp
@@ -280,7 +293,8 @@ lemma w_map_step_acc:
 
 lemmas w_map_step = w_map_step_list w_map_step_acc
 
-lemma w_map_endpoint: "to < length xs \<Longrightarrow> fst (w_map xs frm to f acc obsv) ! to = xs ! to"
+lemma w_map_endpoint: 
+  "to < length xs \<Longrightarrow> fst (w_map xs frm to f acc obsv) ! to = xs ! to"
   apply (induct xs rule: rev_induct)
   apply (simp add: w_map_def)
   apply clarsimp
@@ -308,7 +322,8 @@ lemma no_update_acc:
   done
 
 lemma w_map_map_eq_whole:
-  "\<lbrakk>\<forall>x ob a. snd (f x a ob) = a \<rbrakk> \<Longrightarrow> fst (w_map xs 0 (length xs) f acc obsv) = map (\<lambda>x. fst (f x acc obsv)) xs "
+  "\<lbrakk>\<forall>x ob a. snd (f x a ob) = a \<rbrakk> 
+    \<Longrightarrow> fst (w_map xs 0 (length xs) f acc obsv) = map (\<lambda>x. fst (f x acc obsv)) xs"
   apply (induct xs rule: rev_induct)
    apply (simp add: w_map_def)
   apply simp

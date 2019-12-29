@@ -12,7 +12,7 @@ type_synonym u32 = "32 word"
 section \<open> Frame Constraints \<close>
 
 definition frame_word32_ptr :: "lifted_globals \<Rightarrow> (word32 ptr) set \<Rightarrow> lifted_globals \<Rightarrow> (word32 ptr)  set \<Rightarrow> (word32 ptr) set \<Rightarrow> bool"
-           where
+  where
   "frame_word32_ptr s p\<^sub>i s' p\<^sub>o ign \<equiv> \<forall>p :: word32 ptr. 
                           (p \<in> p\<^sub>i \<and> p \<notin> p\<^sub>o \<and> p \<notin> ign \<longrightarrow> \<not> is_valid_w32 s' p) \<comment> \<open>leak freedom\<close>
                        \<and>  (p \<notin> p\<^sub>i \<and> p \<in> p\<^sub>o \<and> p \<notin> ign\<longrightarrow> \<not> is_valid_w32 s  p) \<comment> \<open>fresh allocation\<close>
@@ -21,7 +21,7 @@ definition frame_word32_ptr :: "lifted_globals \<Rightarrow> (word32 ptr) set \<
                                heap_w32 s  p = heap_w32 s' p)" \<comment> \<open>inertia\<close>
 
 definition frame_WordArray_u32_C_ptr :: "lifted_globals \<Rightarrow> (WordArray_u32_C ptr) set \<Rightarrow> lifted_globals \<Rightarrow> (WordArray_u32_C ptr) set \<Rightarrow> (WordArray_u32_C ptr) set \<Rightarrow> bool"
-           where
+  where
   "frame_WordArray_u32_C_ptr s p\<^sub>i s' p\<^sub>o ign \<equiv> \<forall>p :: WordArray_u32_C ptr. 
                        (p \<in> p\<^sub>i \<and> p \<notin> p\<^sub>o \<and> p \<notin> ign \<longrightarrow> \<not> is_valid_WordArray_u32_C s' p) \<comment> \<open>leak freedom\<close>
                        \<and>  (p \<notin> p\<^sub>i \<and> p \<in> p\<^sub>o \<and> p \<notin> ign \<longrightarrow> \<not> is_valid_WordArray_u32_C s  p) \<comment> \<open>fresh allocation\<close>
@@ -30,6 +30,7 @@ definition frame_WordArray_u32_C_ptr :: "lifted_globals \<Rightarrow> (WordArray
                                (is_valid_WordArray_u32_C s p \<longrightarrow>
                                heap_WordArray_u32_C s  p = heap_WordArray_u32_C s' p))" \<comment> \<open>inertia\<close>
 
+lemmas frame_def = frame_WordArray_u32_C_ptr_def frame_word32_ptr_def
 
 lemma frame_triv_w32_ptr: "frame_WordArray_u32_C_ptr state P state P ign"
   using frame_WordArray_u32_C_ptr_def by blast
@@ -39,10 +40,56 @@ lemma frame_triv_w32: "frame_word32_ptr state P state P ign"
 
 lemmas frame_triv = frame_triv_w32_ptr frame_triv_w32
 
-lemma 
+lemma frame_weaken_w32:
   "\<lbrakk> A \<subseteq> A'; frame_word32_ptr s A s' A I\<rbrakk> \<Longrightarrow> frame_word32_ptr s A' s' A' I"
   apply (clarsimp simp add: frame_word32_ptr_def)
   by blast
+
+lemma frame_combine_w32:
+  "\<lbrakk>frame_word32_ptr s A s' A' I\<^sub>A; frame_word32_ptr s B s' B' I\<^sub>B; 
+    I\<^sub>A \<inter> A = {}; I\<^sub>A \<inter> A' = {}; I\<^sub>B \<inter> B = {}; I\<^sub>B \<inter> B' = {}; I = (I\<^sub>A \<union> I\<^sub>B) - (A \<union> A' \<union> B \<union> B')\<rbrakk> 
+    \<Longrightarrow> frame_word32_ptr s (A \<union> B) s' (A' \<union> B') I"
+  apply (clarsimp simp add: frame_word32_ptr_def)
+  apply (rule conjI)
+   apply clarsimp
+   apply (erule_tac x = p in allE)+
+   apply clarsimp
+   apply (erule disjE; clarsimp; blast)
+  apply (rule conjI)
+   apply clarsimp
+   apply (erule_tac x = p in allE)+
+   apply clarsimp
+   apply (erule disjE; clarsimp; blast)
+  apply clarsimp
+  done
+
+
+lemma frame_weaken_w32_ptr:
+  "\<lbrakk> A \<subseteq> A'; frame_WordArray_u32_C_ptr s A s' A I\<rbrakk> \<Longrightarrow> frame_WordArray_u32_C_ptr s A' s' A' I"
+  apply (clarsimp simp add: frame_WordArray_u32_C_ptr_def)
+  by blast
+
+lemma frame_combine_w32_ptr:
+  "\<lbrakk>frame_WordArray_u32_C_ptr s A s' A' I\<^sub>A; frame_WordArray_u32_C_ptr s B s' B' I\<^sub>B; 
+    I\<^sub>A \<inter> A = {}; I\<^sub>A \<inter> A' = {}; I\<^sub>B \<inter> B = {}; I\<^sub>B \<inter> B' = {}; I = (I\<^sub>A \<union> I\<^sub>B) - (A \<union> A' \<union> B \<union> B')\<rbrakk> 
+    \<Longrightarrow> frame_WordArray_u32_C_ptr s (A \<union> B) s' (A' \<union> B') I"
+  apply (clarsimp simp add: frame_WordArray_u32_C_ptr_def)
+  apply (rule conjI)
+   apply clarsimp
+   apply (erule_tac x = p in allE)+
+   apply clarsimp
+   apply (erule disjE; clarsimp; blast)
+  apply (rule conjI)
+   apply clarsimp
+   apply (erule_tac x = p in allE)+
+   apply clarsimp
+   apply (erule disjE; clarsimp; blast)
+  apply clarsimp
+  done
+
+lemmas frame_weaken = frame_weaken_w32 frame_weaken_w32_ptr
+
+lemmas frame_combine = frame_combine_w32 frame_combine_w32_ptr
 
 section \<open> Helper things \<close>
 
@@ -72,15 +119,6 @@ lemmas words_mult_cancel_right =
   word_mult_cancel_right[where 'a=16]  
   word_mult_cancel_right[where 'a=32] 
   word_mult_cancel_right[where 'a=64]
-(*
-lemma order_indices':     
-  fixes ptr :: "('a::c_type) ptr"
-  assumes "n * size_of (TYPE('a)) < unat (max_word :: 32 word)"
-  assumes "m * size_of (TYPE('a)) < unat (max_word :: 32 word)"
-  assumes "n < m"
-  assumes "size_of (TYPE('a)) > 0"
-  shows "ptr +\<^sub>p int n \<noteq> ptr +\<^sub>p int m"
-*)
 
 lemma order_indices:     
   fixes ptr :: "('a::c_type) ptr"
@@ -121,7 +159,8 @@ lemma distinct_indices:
 find_theorems "?a + ?b = ?a + ?c"
 subsection \<open> arrlist \<close>
 
-fun arrlist :: "('a :: c_type ptr \<Rightarrow> 'b) \<Rightarrow> ('a :: c_type ptr \<Rightarrow> bool) \<Rightarrow> 'b list \<Rightarrow> 'a ptr \<Rightarrow> bool" where
+fun arrlist :: "('a :: c_type ptr \<Rightarrow> 'b) \<Rightarrow> ('a :: c_type ptr \<Rightarrow> bool) \<Rightarrow> 'b list \<Rightarrow> 'a ptr \<Rightarrow> bool"
+  where
   "arrlist h v [] p = True" |
   "arrlist h v (x # xs) p = (v p \<and> h p = x \<and> arrlist h v xs (p +\<^sub>p 1))"
 
@@ -163,7 +202,8 @@ qed
 
 lemmas arrlist_nth = arrlist_nth_value arrlist_nth_valid
 
-lemma case_Suc: "\<forall>i < Suc n.  P i \<Longrightarrow> (\<forall>i < n . P (Suc i)) \<and> P 0"
+lemma case_Suc: 
+  "\<forall>i < Suc n.  P i \<Longrightarrow> (\<forall>i < n . P (Suc i)) \<and> P 0"
   by simp
 
 lemma to_arrlist:
@@ -196,23 +236,10 @@ lemma arrlist_all_nth:
 
 section \<open> Word array abstraction \<close>
 
-definition u32list :: "lifted_globals \<Rightarrow> u32 list \<Rightarrow> u32 ptr \<Rightarrow> bool" where
+definition u32list :: "lifted_globals \<Rightarrow> u32 list \<Rightarrow> u32 ptr \<Rightarrow> bool" 
+  where
   "u32list s xs p \<equiv> arrlist (heap_w32 s) (is_valid_w32 s) xs p"
-(*
-lemma u32list_Cons: "u32list s (x # xs) p \<longleftrightarrow> (heap_w32 s p = x \<and> is_valid_w32 s p) \<and> u32list s xs (p +\<^sub>p 1)"
-  unfolding u32list_def
-  by force
 
-lemmas u32list_nth_value =
- arrlist_nth_value
-  [where h="heap_w32 s" and v="is_valid_w32 (s :: lifted_globals)" for s,
-   simplified u32list_def[symmetric]]
-
-lemmas u32list_nth_valid =
- arrlist_nth_valid
-  [where h="heap_w32 s" and v="is_valid_w32 (s :: lifted_globals)" for s,
-   simplified u32list_def[symmetric]]
-*)
 lemmas u32list_nth =
  arrlist_nth
   [where h="heap_w32 s" and v="is_valid_w32 (s :: lifted_globals)" for s,
@@ -231,7 +258,8 @@ abbreviation "w_p s w \<equiv> w_val (heap_WordArray_u32_C s) w"
 abbreviation "w_l s w \<equiv> w_len (heap_WordArray_u32_C s) w"
 
 (* Converts a wordarray to a list *)
-definition \<alpha> :: "lifted_globals \<Rightarrow> u32 list \<Rightarrow> WordArray_u32_C ptr \<Rightarrow> bool" where
+definition \<alpha> :: "lifted_globals \<Rightarrow> u32 list \<Rightarrow> WordArray_u32_C ptr \<Rightarrow> bool"
+  where
   "\<alpha> s xs w \<equiv>
     u32list s xs (w_p s w)
     \<and> (unat (w_l s w)) = length xs
@@ -271,7 +299,7 @@ subsection \<open> wordarray_get \<close>
 lemma wordarray_get_refinement:
   "\<lbrace>\<lambda>s. \<alpha> s xs w \<rbrace>
     wordarray_get_0' (t1_C w i)
-  \<lbrace>\<lambda>r s. \<alpha> s xs w \<and> r = w_get xs (unat i) \<rbrace>!"
+   \<lbrace>\<lambda>r s. \<alpha> s xs w \<and> r = w_get xs (unat i) \<rbrace>!"
   apply (unfold wordarray_get_0'_def)
   apply clarsimp
   apply wp
@@ -282,8 +310,8 @@ lemma wordarray_get_refinement:
 
 lemma wordarray_get_frame:
   "\<lbrace>\<lambda>s. state = s \<and> \<alpha> s xs w \<rbrace>
-  wordarray_get_0' (t1_C w i)
-  \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
+    wordarray_get_0' (t1_C w i)
+   \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
          frame_word32_ptr state {} s {} {}\<rbrace>!"
   apply(unfold wordarray_get_0'_def)
   apply(clarsimp)
@@ -297,7 +325,7 @@ subsection \<open> wordarray_length \<close>
 lemma wordarray_length_refinement:
   "\<lbrace>\<lambda>s. \<alpha> s xs w\<rbrace>
     wordarray_length_0' w
-  \<lbrace>\<lambda>r s. \<alpha> s xs w \<and> (unat r) = w_length xs\<rbrace>!"
+   \<lbrace>\<lambda>r s. \<alpha> s xs w \<and> (unat r) = w_length xs\<rbrace>!"
   apply(unfold wordarray_length_0'_def)
   apply(unfold w_length_def)
   apply(clarsimp)
@@ -307,8 +335,8 @@ lemma wordarray_length_refinement:
 
 lemma wordarray_length_frame:
   "\<lbrace>\<lambda>s. state = s \<and> \<alpha> s xs w \<rbrace>
-  wordarray_length_0' w
-  \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
+    wordarray_length_0' w
+   \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
          frame_word32_ptr state {} s {} {}\<rbrace>!"
   apply(unfold wordarray_length_0'_def)
   apply(clarsimp)
@@ -318,14 +346,16 @@ lemma wordarray_length_frame:
 
 subsection \<open> wordarray_put2 \<close>
 
-lemma wordarray_same_address: "\<lbrakk>\<alpha> s xs w; n < length xs; m < length xs\<rbrakk> \<Longrightarrow>
+lemma wordarray_same_address: 
+  "\<lbrakk>\<alpha> s xs w; n < length xs; m < length xs\<rbrakk> \<Longrightarrow>
     ((w_val (heap_WordArray_u32_C s) w) +\<^sub>p int n = (w_val (heap_WordArray_u32_C s) w) +\<^sub>p int m)
      = (n = m)"
   apply (simp add: \<alpha>_def)
   using distinct_indices apply force
   done
 
-lemma wordarray_distinct_address: "\<lbrakk>\<alpha> s xs w; n < length xs; m < length xs\<rbrakk> \<Longrightarrow> 
+lemma wordarray_distinct_address: 
+  "\<lbrakk>\<alpha> s xs w; n < length xs; m < length xs\<rbrakk> \<Longrightarrow> 
     (w_val (heap_WordArray_u32_C s) w) +\<^sub>p int n \<noteq> (w_val (heap_WordArray_u32_C s) w) +\<^sub>p int m
     \<longrightarrow> n \<noteq> m"
   apply (intro allI impI)
@@ -335,8 +365,8 @@ lemma wordarray_distinct_address: "\<lbrakk>\<alpha> s xs w; n < length xs; m < 
 (*(heap_w32_update (\<lambda>a b. if b = values_C (heap_WordArray_u32_C state w) +\<^sub>p uint i then v else a b) state)*)
 lemma wordarray_put2_frame:
   "\<lbrace>\<lambda>s. state = s \<and> \<alpha> s xs w \<rbrace>
-  wordarray_put2_0' (t2_C w i v)
-  \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
+    wordarray_put2_0' (t2_C w i v)
+   \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} {} \<and> 
          frame_word32_ptr state { (w_p s w) +\<^sub>p uint i} s {(w_p s w) +\<^sub>p uint i } {} \<rbrace>!"
   apply (unfold wordarray_put2_0'_def)
   apply clarsimp
@@ -382,13 +412,18 @@ lemma wordarray_put_no_fail:
 
 subsection \<open> wordarray_fold_no_break \<close>
 
-fun fold_dispatch :: "int \<Rightarrow> t3_C \<Rightarrow> word32" where
-  "fold_dispatch n args = (if n = sint FUN_ENUM_mul_bod then t3_C.acc_C args * t3_C.elem_C args else t3_C.acc_C args + t3_C.elem_C args)"
+fun fold_dispatch :: "int \<Rightarrow> t3_C \<Rightarrow> word32"
+  where
+  "fold_dispatch n args = (if n = sint FUN_ENUM_mul_bod 
+                           then t3_C.acc_C args * t3_C.elem_C args 
+                           else t3_C.acc_C args + t3_C.elem_C args)"
 
-definition f_n where  "f_n \<equiv> (\<lambda>n a1 a2 a3. fold_dispatch (sint n) (t3_C a1 a2 a3))"
+definition f_n
+  where  
+  "f_n \<equiv> (\<lambda>n a1 a2 a3. fold_dispatch (sint n) (t3_C a1 a2 a3))"
 
 lemma unat_min: 
-"unat (min a b) = min (unat a) (unat b)"
+  "unat (min a b) = min (unat a) (unat b)"
   by (simp add: min_of_mono' word_le_nat_alt)
 
 lemma fold_loop_inv:
@@ -463,7 +498,7 @@ lemma fold_loop_frame_inv:
   by (simp add: diff_less_mono2 abs_length_eq unat_min)
 
 lemma wordarray_fold_frame:
-  "\<lbrace>\<lambda>s. \<alpha> s xs w \<and> state = s \<and> w \<notin> A \<and> (\<forall>i < length xs. p +\<^sub>p i \<in> B)\<rbrace>
+  "\<lbrace>\<lambda>s. \<alpha> s xs w \<and> state = s \<and> w \<notin> A \<and> (\<forall>i < length xs. p +\<^sub>p i \<notin> B)\<rbrace>
     wordarray_fold_no_break_0' (t5_C acc w f frm obsv to)
    \<lbrace>\<lambda>r s. frame_WordArray_u32_C_ptr state {} s {} A \<and> 
          frame_word32_ptr state {} s {} B \<rbrace>!"
@@ -486,22 +521,24 @@ lemma wordarray_fold_frame:
      apply wp
     apply wp
    apply wp
-  apply (clarsimp simp: frame_triv)
+  apply (clarsimp simp: frame_triv frame_def)
   apply safe
     apply (simp add: min.commute min.strict_order_iff)
    apply (metis min.idem min.strict_order_iff neqE)
   apply (simp add: \<alpha>_def)
   done
-                          
+
+
 subsection \<open>wordarray_map\<close>
 
  
 fun map_dispatch :: "int \<Rightarrow> t6_C \<Rightarrow> word32 \<times> unit_t_C" 
   where
-"map_dispatch n args = (if n = sint FUN_ENUM_inc then ((t6_C.elem_C args + 1), (t6_C.acc_C args)) 
+  "map_dispatch n args = (if n = sint FUN_ENUM_inc then ((t6_C.elem_C args + 1), (t6_C.acc_C args)) 
                         else  ((t6_C.elem_C args + 1), (t6_C.acc_C args)))"
 definition m_n 
-  where "m_n = (\<lambda>n a1 a2 a3. map_dispatch (sint n) (t6_C a2 a1 a3))"
+  where 
+  "m_n = (\<lambda>n a1 a2 a3. map_dispatch (sint n) (t6_C a2 a1 a3))"
 
 lemma map_loop:
   "\<lbrace>\<lambda>s.  b = y \<and> y < ret \<and> ret = min to (w_l s w) \<and> (frm \<le> ret \<longrightarrow> y \<le> ret) \<and> 
