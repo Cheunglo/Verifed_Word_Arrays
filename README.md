@@ -16,4 +16,9 @@ Word arrays are a commonly used data structure, especially in low level
 systems, so verifying these would be beneficial as this would reduce the
 overall cost of verification of any project that requires word arrays.
 
+The file WordArray.cogent contains the trivial Cogent program to generate the C implementations of the word array functions.
+The file WordArraySpec.thy contains the specification for word arrays.
+The file WordArrayT.thy contains the proofs of functional correctness and frame constraint satisfiability.
+The file main_pp_inferred.c is generated from the files main.ac and entrypoints.cfg from the make file Makefile. This file contains the C implementations of the word array functions.
+
 [![DOI](https://zenodo.org/badge/230601479.svg)](https://zenodo.org/badge/latestdoi/230601479)
