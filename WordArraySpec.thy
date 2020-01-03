@@ -20,7 +20,7 @@ lemma take_drop_Suc:
   apply clarsimp
   by (metis Cons_nth_drop_Suc Suc_diff_Suc take_Suc_Cons)
 
-section \<open> wordarray_length specification \<close>
+section \<open> wordarray\_length specification \<close>
 
 definition w_length :: "u32 list \<Rightarrow> nat"
   where
@@ -32,7 +32,7 @@ lemma w_length_length_eq:
   "w_length xs = length xs"
   by (simp add: w_length_def)
 
-section \<open> wordarray_get specification \<close>
+section \<open> wordarray\_get specification \<close>
 
 definition w_get :: "u32 list \<Rightarrow> nat \<Rightarrow> u32"
   where
@@ -44,7 +44,7 @@ lemma w_get_get_eq:
   "i < length xs \<Longrightarrow> w_get xs i = xs ! i"
   by (simp add: w_get_def)
 
-section \<open> wordarray_put2 specification \<close>
+section \<open> wordarray\_put2 specification \<close>
 
 definition w_put :: "u32 list \<Rightarrow> nat \<Rightarrow> 
                       u32 \<Rightarrow> u32 list"
@@ -57,7 +57,7 @@ lemma w_put_listupdate_eq:
   "w_put xs i v= xs[i := v]"
   by (simp add: w_put_def)
 
-section \<open> wordarray_fold_no_break specification \<close>
+section \<open> wordarray\_fold\_no\_break specification \<close>
 
 definition w_fold :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (u32 \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'a) \<Rightarrow> 
                       'a \<Rightarrow> 'b \<Rightarrow> 'a"
@@ -69,7 +69,7 @@ definition w_fold :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow>
     fold (\<lambda>x y. f x y obs)  
     (take (to - frm) (drop frm w)) acc)"
 
-subsection \<open>w_fold helper lemmas \<close>
+subsection \<open>w\_fold helper lemmas \<close>
 
 lemma w_fold_step: "\<lbrakk>frm < length xs; frm < to\<rbrakk> \<Longrightarrow>
   w_fold xs frm to f acc obsv = w_fold xs (Suc frm) to f (f (xs ! frm) acc obsv) obsv"
@@ -91,7 +91,7 @@ lemma w_fold_end:
   apply (simp add: w_fold_def)
   done
 
-subsection \<open> w_fold test \<close>
+subsection \<open> w\_fold test \<close>
 
 primrec summer :: "u32 \<Rightarrow> u32 \<Rightarrow> unit \<Rightarrow> u32" where
 "summer elem acc () = elem + acc"
@@ -110,7 +110,7 @@ lemma w_fold_fold_eq_slice:
   apply (simp add: w_fold_def)
   done
 
-section \<open> wordarray_fold specification \<close>
+section \<open> wordarray\_fold specification \<close>
 definition w_fold_break :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow>
                             (u32 \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> ('a, 'c) LoopResult ) \<Rightarrow> 
                             'a \<Rightarrow> 'b \<Rightarrow> ('a, 'c) LoopResult"
@@ -125,7 +125,7 @@ definition w_fold_break :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Right
     (take (to - frm) (drop frm w)) (Iterate acc))"
 
 
-section \<open> wordarray_map_no_break specification \<close>
+section \<open> wordarray\_map\_no\_break specification \<close>
 
 definition w_map :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (u32 \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> u32 \<times> 'a) \<Rightarrow> 
                       'a \<Rightarrow> 'b \<Rightarrow> u32 list \<times> 'a"
@@ -141,7 +141,7 @@ definition w_map :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> 
         (take (to - frm) (drop frm w)) ([], acc)
      in ((take frm w) @ ys @ (drop to w), vacc))"
 
-subsection \<open> w_map helper lemmas \<close>
+subsection \<open> w\_map helper lemmas \<close>
 
 lemma w_map_bounds: 
   "to \<ge> length xs \<Longrightarrow> w_map xs frm to f acc obsv = w_map xs frm (length xs) f acc obsv"
@@ -346,7 +346,7 @@ lemma w_map_map_eq_whole:
   apply simp
   done
 
-section \<open> wordarray_map specification \<close>
+section \<open> wordarray\_map specification \<close>
 
 definition w_map_break :: "u32 list \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow>
                       (u32 \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> (u32 \<times> 'a, 'c) LoopResult) \<Rightarrow> 

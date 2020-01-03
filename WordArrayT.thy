@@ -91,9 +91,9 @@ lemmas frame_weaken = frame_weaken_w32 frame_weaken_w32_ptr
 
 lemmas frame_combine = frame_combine_w32 frame_combine_w32_ptr
 
-section \<open> Helper things \<close>
+section \<open> Helper Lemmas \<close>
 
-subsection \<open> misc pointer lemmas \<close>
+subsection \<open> Miscellaneous Pointer Lemmas \<close>
 
 lemma cptr_add_add[simp]:
   "p +\<^sub>p m +\<^sub>p n = p +\<^sub>p (m + n)"
@@ -156,7 +156,7 @@ lemma distinct_indices:
   apply (case_tac "n < m")
    apply (erule order_indices; clarsimp)
   by (metis linorder_neqE_nat order_indices)
-find_theorems "?a + ?b = ?a + ?c"
+
 subsection \<open> arrlist \<close>
 
 fun arrlist :: "('a :: c_type ptr \<Rightarrow> 'b) \<Rightarrow> ('a :: c_type ptr \<Rightarrow> bool) \<Rightarrow> 'b list \<Rightarrow> 'a ptr \<Rightarrow> bool"
@@ -234,7 +234,7 @@ lemma arrlist_all_nth:
   apply (erule to_arrlist)
   done
 
-section \<open> Word array abstraction \<close>
+section \<open> Word Array Abstraction \<close>
 
 definition u32list :: "lifted_globals \<Rightarrow> u32 list \<Rightarrow> u32 ptr \<Rightarrow> bool" 
   where
@@ -292,9 +292,9 @@ lemma \<alpha>_all_nth:
   apply (clarsimp simp: \<alpha>_def u32list_all_nth)
   done
 
-section \<open> refinement and frame proofs \<close>
+section \<open> Refinement and Frame Proofs \<close>
 
-subsection \<open> wordarray_get \<close>
+subsection \<open> wordarray\_get \<close>
 
 lemma wordarray_get_refinement:
   "\<lbrace>\<lambda>s. \<alpha> s xs w \<rbrace>
@@ -320,7 +320,7 @@ lemma wordarray_get_frame:
   apply (simp add: \<alpha>_def)
   done
   
-subsection \<open> wordarray_length \<close>
+subsection \<open> wordarray\_length \<close>
 
 lemma wordarray_length_refinement:
   "\<lbrace>\<lambda>s. \<alpha> s xs w\<rbrace>
@@ -344,7 +344,7 @@ lemma wordarray_length_frame:
   apply (clarsimp simp: frame_triv \<alpha>_def)
   done
 
-subsection \<open> wordarray_put2 \<close>
+subsection \<open> wordarray\_put2 \<close>
 
 lemma wordarray_same_address: 
   "\<lbrakk>\<alpha> s xs w; n < length xs; m < length xs\<rbrakk> \<Longrightarrow>
@@ -410,17 +410,17 @@ lemma wordarray_put_no_fail:
    apply (metis (full_types) \<alpha>_def int_unat u32list_all_nth w_length_def)
   by (simp add: word_less_nat_alt)
 
-subsection \<open> wordarray_fold_no_break \<close>
+subsection \<open> wordarray\_fold\_no\_break \<close>
 
 fun fold_dispatch :: "int \<Rightarrow> t3_C \<Rightarrow> word32"
   where
   "fold_dispatch n args = (if n = sint FUN_ENUM_mul_bod 
-                           then t3_C.acc_C args * t3_C.elem_C args 
-                           else t3_C.acc_C args + t3_C.elem_C args)"
+                           then t3_C.elem_C args * t3_C.acc_C args 
+                           else t3_C.elem_C args + t3_C.acc_C args)"
 
 definition f_n
   where  
-  "f_n \<equiv> (\<lambda>n a1 a2 a3. fold_dispatch (sint n) (t3_C a1 a2 a3))"
+  "f_n \<equiv> (\<lambda>n a1 a2 a3. fold_dispatch (sint n) (t3_C a2 a1 a3))"
 
 lemma unat_min: 
   "unat (min a b) = min (unat a) (unat b)"
@@ -529,7 +529,7 @@ lemma wordarray_fold_frame:
   done
 
 
-subsection \<open>wordarray_map\<close>
+subsection \<open> wordarray\_map\_no\_break \<close>
 
  
 fun map_dispatch :: "int \<Rightarrow> t6_C \<Rightarrow> word32 \<times> unit_t_C" 
